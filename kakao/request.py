@@ -66,7 +66,7 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
 
                 if not done:
                     prevSearch = json_data.get("organizations")
-                    #pretty_print(json_data)
+                    pretty_print(json_data)
                     print(datetime.now())
 
             except json.decoder.JSONDecodeError as decodeerror:
