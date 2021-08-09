@@ -58,7 +58,7 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
                                 continue
 
                         print(f"{x.get('orgName')} 에서 백신을 {x.get('leftCounts')}개 발견했습니다.")
-                        found = check_vaccine_availablity(x, vaccine_type, cookie)
+                        found, target = check_vaccine_availablity(x, vaccine_type, cookie)
                         if found:
                             print(f"주소는: {x.get('address')} 입니다.")
                             done = True
@@ -103,7 +103,7 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
         return None
     else:
         vaccine_found_code = found.get('vaccineCode')
-        organization_code = found.get('orgCode')
+        organization_code = target
 
     if vaccine_found_code and try_reservation(organization_code, vaccine_found_code, cookie):
         return None
@@ -120,8 +120,8 @@ def check_vaccine_availablity(data, vaccine_type, cookie):
         find = list(filter(lambda v: v.get('vaccineCode') == x and v.get('leftCount') != 0, check_organization_data))
         if len(find):
             print(f"{find[0].get('vaccineName')} {find[0].get('leftCount')}개가 있습니다.")
-            return find[0]
-    return False
+            return [find[0], data.get("orgCode")]
+    return [False, False]
 
 
 def try_reservation(organization_code, vaccine_type, jar):
