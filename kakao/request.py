@@ -53,7 +53,7 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
                 for x in list(reversed(json_data.get("organizations"))):
                     if x.get('status') == "AVAILABLE" or x.get('leftCounts') != 0:
                         if prevSearch:
-                            prev = list(filter(lambda org: org.get('orgName') == x.get('orgName'), prevSearch))
+                            prev = list(filter(lambda org: org.get('orgCode') == x.get('orgCode'), prevSearch))
                             if len(prev) and prev[0].get('leftCounts') == x.get('leftCounts'):
                                 continue
 
@@ -63,6 +63,8 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
                             print(f"주소는: {x.get('address')} 입니다.")
                             done = True
                             break
+                        else:
+                            print("선택한 백신 종류가 없습니다.")
 
                 if not done:
                     prevSearch = json_data.get("organizations")
@@ -136,6 +138,11 @@ def try_reservation(organization_code, vaccine_type, jar):
             continue
         if key == 'code' and value == "NO_VACANCY":
             print("잔여백신 접종 신청이 선착순 마감되었습니다.")
+            for retry in range(0, 4):
+                result = retry_reservation(organization_code, vaccine_type, jar)
+                if result:
+                    close(success=True)
+
         elif key == 'code' and value == "TIMEOUT":
             print("TIMEOUT, 예약을 재시도합니다.")
             retry_reservation(organization_code, vaccine_type, jar)
@@ -166,6 +173,7 @@ def retry_reservation(organization_code, vaccine_type, jar):
             continue
         if key == 'code' and value == "NO_VACANCY":
             print("잔여백신 접종 신청이 선착순 마감되었습니다.")
+            return False
         elif key == 'code' and value == "SUCCESS":
             print("백신접종신청 성공!!!")
             organization_code_success = response_json.get("organization")
