@@ -50,7 +50,7 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
 
             try:
                 json_data = json.loads(response.text)
-                for x in json_data.get("organizations"):
+                for x in list(reversed(json_data.get("organizations"))):
                     if x.get('status') == "AVAILABLE" or x.get('leftCounts') != 0:
                         if prevSearch:
                             prev = list(filter(lambda org: org.get('orgName') == x.get('orgName'), prevSearch))
