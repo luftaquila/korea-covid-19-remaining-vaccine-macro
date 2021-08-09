@@ -52,12 +52,15 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
 
                 for x in json_data.get("organizations"):
                     if x.get('status') == "AVAILABLE" or x.get('leftCounts') != 0:
-                        found = x
-                        done = True
-                        break
+                        print(f"{x.get('orgName')} 에서 백신을 {x.get('leftCounts')}개 발견했습니다.")
+                        found = check_vaccine_availablity(x, vaccine_type, cookie)
+                        if found:
+                            print(f"주소는: {x.get('address')} 입니다.")
+                            done = True
+                            break
 
                 if not done:
-                    pretty_print(json_data)
+                    #pretty_print(json_data)
                     print(datetime.now())
 
             except json.decoder.JSONDecodeError as decodeerror:
@@ -87,32 +90,18 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
             print("AnyException : ", error)
             close()
 
+    print(found)
+    vaccine_found_code = None
+
     if found is None:
         find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bottom_y, only_left)
         return None
-
-    print(f"{found.get('orgName')} 에서 백신을 {found.get('leftCounts')}개 발견했습니다.")
-    print(f"주소는 : {found.get('address')} 입니다.")
-    organization_code = found.get('orgCode')
+    else:
+        vaccine_found_code = found.get('vaccineCode')
 
     # 실제 백신 남은수량 확인
-    vaccine_found_code = None
 
-    if vaccine_type == "ANY":  # ANY 백신 선택
-        check_organization_url = f'https://vaccine.kakao.com/api/v3/org/org_code/{organization_code}'
-        check_organization_response = requests.get(check_organization_url, headers=headers_vaccine, cookies=cookie, verify=False)
-        check_organization_data = json.loads(check_organization_response.text).get("lefts")
-        for x in check_organization_data:
-            if x.get('leftCount') != 0:
-                print(f"{x.get('vaccineName')} 백신을 {x.get('leftCount')}개 발견했습니다.")
-                vaccine_found_code = x.get('vaccineCode')
-                break
-            else:
-                print(f"{x.get('vaccineName')} 백신이 없습니다.")
 
-    else:
-        vaccine_found_code = vaccine_type
-        print(f"{vaccine_found_code} 으로 예약을 시도합니다.")
 
     if vaccine_found_code and try_reservation(organization_code, vaccine_found_code, cookie):
         return None
@@ -120,6 +109,17 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
         find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bottom_y, only_left)
         return None
 
+
+def check_vaccine_availablity(data, vaccine_type, cookie):
+    check_organization_url = f'https://vaccine.kakao.com/api/v3/org/org_code/{data.get("orgCode")}'
+    check_organization_response = requests.get(check_organization_url, headers=headers_vaccine, cookies=cookie, verify=False)
+    check_organization_data = json.loads(check_organization_response.text).get("lefts")
+    for x in vaccine_type:
+        find = list(filter(lambda v: v.get('vaccineCode') == x and v.get('leftCount') != 0, check_organization_data))
+        if len(find):
+            print(f"{find[0].get('vaccineName')} {find[0].get('leftCount')}개가 있습니다.")
+            return find[0]
+    return False
 
 def try_reservation(organization_code, vaccine_type, jar):
     reservation_url = 'https://vaccine.kakao.com/api/v2/reservation'
