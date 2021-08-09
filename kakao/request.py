@@ -41,6 +41,7 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
             "topLeft": {"x": top_x, "y": top_y}}
     done = False
     found = None
+    prevSearch = None
 
     while not done:
         try:
@@ -49,9 +50,13 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
 
             try:
                 json_data = json.loads(response.text)
-
                 for x in json_data.get("organizations"):
                     if x.get('status') == "AVAILABLE" or x.get('leftCounts') != 0:
+                        if prevSearch:
+                            prev = list(filter(lambda org: org.get('orgName') == x.get('orgName'), prevSearch))
+                            if len(prev) and prev[0].get('leftCounts') == x.get('leftCounts'):
+                                continue
+
                         print(f"{x.get('orgName')} 에서 백신을 {x.get('leftCounts')}개 발견했습니다.")
                         found = check_vaccine_availablity(x, vaccine_type, cookie)
                         if found:
@@ -60,6 +65,7 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
                             break
 
                 if not done:
+                    prevSearch = json_data.get("organizations")
                     #pretty_print(json_data)
                     print(datetime.now())
 
@@ -99,10 +105,6 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
     else:
         vaccine_found_code = found.get('vaccineCode')
 
-    # 실제 백신 남은수량 확인
-
-
-
     if vaccine_found_code and try_reservation(organization_code, vaccine_found_code, cookie):
         return None
     else:
@@ -120,6 +122,7 @@ def check_vaccine_availablity(data, vaccine_type, cookie):
             print(f"{find[0].get('vaccineName')} {find[0].get('leftCount')}개가 있습니다.")
             return find[0]
     return False
+
 
 def try_reservation(organization_code, vaccine_type, jar):
     reservation_url = 'https://vaccine.kakao.com/api/v2/reservation'
