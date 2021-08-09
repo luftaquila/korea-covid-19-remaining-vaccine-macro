@@ -96,7 +96,6 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
             print("AnyException : ", error)
             close()
 
-    print(found)
     vaccine_found_code = None
 
     if found is None:
@@ -104,6 +103,7 @@ def find_vaccine(cookie, search_time, vaccine_type, top_x, top_y, bottom_x, bott
         return None
     else:
         vaccine_found_code = found.get('vaccineCode')
+        organization_code = found.get('orgCode')
 
     if vaccine_found_code and try_reservation(organization_code, vaccine_found_code, cookie):
         return None
