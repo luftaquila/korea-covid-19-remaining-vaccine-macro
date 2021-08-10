@@ -138,10 +138,7 @@ def try_reservation(organization_code, vaccine_type, jar):
             continue
         if key == 'code' and value == "NO_VACANCY":
             print("잔여백신 접종 신청이 선착순 마감되었습니다.")
-            for retry in range(0, 4):
-                result = retry_reservation(organization_code, vaccine_type, jar)
-                if result:
-                    close(success=True)
+            retry_reservation(organization_code, vaccine_type, jar)
 
         elif key == 'code' and value == "TIMEOUT":
             print("TIMEOUT, 예약을 재시도합니다.")
@@ -173,7 +170,6 @@ def retry_reservation(organization_code, vaccine_type, jar):
             continue
         if key == 'code' and value == "NO_VACANCY":
             print("잔여백신 접종 신청이 선착순 마감되었습니다.")
-            return False
         elif key == 'code' and value == "SUCCESS":
             print("백신접종신청 성공!!!")
             organization_code_success = response_json.get("organization")
